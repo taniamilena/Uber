@@ -1,0 +1,583 @@
+/*2. Create 3 Tablespaces?:  
+a. first one with 2 Gb and 1 datafile, tablespace should be named "?uber?" 
+b. Undo tablespace with 25Mb? of space and 1 datafile 
+c. Bigfile tablespace of 5Gb 
+d. Set the undo tablespace to be used in the system*/
+
+CREATE TABLESPACE UBER
+DATAFILE 'UBER1.dbf' SIZE 2G
+AUTOEXTEND ON NEXT 1000K MAXSIZE 2048M
+EXTENT MANAGEMENT LOCAL 
+SEGMENT SPACE MANAGEMENT AUTO
+ONLINE;
+
+
+CREATE UNDO TABLESPACE UNDOTBS
+DATAFILE 'UNDOTBS1.dbf' SIZE 25MB
+
+
+CREATE BIGFILE TABLESPACE BIGTBS
+DATAFILE 'BIGTBS1.dbf' SIZE 5G;
+
+ALTER SYSTEM SET UNDO_TABLESPACE = UNDOTBS scope = both;
+
+/*3. Create a DBA user (with the role DBA) and assign it to the tablespace called "?uber?",
+this user has unlimited space on the tablespace (The user should have permission to connect)*/
+
+CREATE USER DBAUSER IDENTIFIED BY DBAUSER
+DEFAULT TABLESPACE  UBER
+TEMPORARY TABLESPACE TEMP
+QUOTA UNLIMITED ON UBER;
+GRANT DBA TO DBAUSER;
+GRANT CONNECT, RESOURCE TO DBAUSER;
+
+/*4. Create 2 profiles. 
+a. Profile 1: "clerk" password life 40 days, one session per user, 10 minutes idle, 4 failed login attempts 
+b. Profile 3: "development?" password life 100 days, two session per user, 30 minutes idle, no failed login attempts*/ 
+
+CREATE PROFILE CLERK LIMIT
+SESSIONS_PER_USER 1
+CPU_PER_SESSION UNLIMITED
+CPU_PER_CALL UNLIMITED
+CONNECT_TIME 240
+IDLE_TIME 10
+PRIVATE_SGA 20 M
+FAILED_LOGIN_ATTEMPTS 4
+PASSWORD_LIFE_TIME 40
+PASSWORD_REUSE_MAX 4
+PASSWORD_LOCK_TIME 1
+PASSWORD_GRACE_TIME 2;
+
+CREATE PROFILE DEVELOPMENT LIMIT
+SESSIONS_PER_USER 2
+CPU_PER_SESSION UNLIMITED
+CPU_PER_CALL UNLIMITED
+CONNECT_TIME 240
+IDLE_TIME 30
+PRIVATE_SGA 20 M
+PASSWORD_LIFE_TIME 100
+PASSWORD_REUSE_MAX 5
+PASSWORD_LOCK_TIME 1
+PASSWORD_GRACE_TIME 2;
+
+/*5. Create 4 users, assign them the tablespace "?uber?": 
+a. 2 of them should have the clerk profile and the remaining the development profile, all the users should be allow to connect to the database.  
+b. Lock one user associate with clerk profile */
+
+CREATE USER USER1 IDENTIFIED BY USER1
+DEFAULT TABLESPACE  UBER
+PROFILE CLERK;
+GRANT CREATE SESSION TO USER1;
+
+CREATE USER USER2 IDENTIFIED BY USER2
+DEFAULT TABLESPACE  UBER
+PROFILE CLERK;
+GRANT CREATE SESSION TO USER2;
+
+CREATE USER USER3 IDENTIFIED BY USER3
+DEFAULT TABLESPACE  UBER
+PROFILE DEVELOPMENT;
+GRANT CREATE SESSION TO USER3;
+
+CREATE USER USER4 IDENTIFIED BY USER4
+DEFAULT TABLESPACE  UBER
+PROFILE DEVELOPMENT;
+GRANT CREATE SESSION TO USER4;
+
+ALTER USER USER2
+ACCOUNT LOCK ; 
+
+/*6. Create tables with its columns according to your normalization using the DBA user?.*/
+
+CREATE TABLE personas(
+id int primary key,
+nombre varchar(30),
+apellido varchar(150),
+codigo_invitacion int,
+foto varchar(200)
+);
+--ID_LENGUAJE
+--ID_CIUDAD
+
+CREATE TABLE lenguajes(
+id int primary key,
+descripcion varchar(30)
+);
+
+CREATE TABLE promociones(
+id int primary key,
+descripcion varchar(30),
+descuento double
+);
+
+
+CREATE TABLE consignaciones(
+id int primary key,
+monto double
+);
+--ID_PERFILCONDUCTOR
+
+
+CREATE TABLE cuenta_pago(
+id int primary key,
+nro_cuenta varchar(30)
+);
+--ID_PERFIL_CONDUC
+
+CREATE TABLE liquidaciones(
+id int primary key,
+monto double
+);
+--ID_PERFIL_CONDUC
+
+
+CREATE TABLE email_persona(
+id int primary key,
+email varchar(150)
+);
+--ID_PERSONA
+
+
+CREATE TABLE perfil_cliente(
+id int primary key,
+decripcion varchar(30) -- validar campo nombreeeeeeeeeeeeeeee quitarlo
+);
+--ID_PERSONA
+--ID_PROMO
+
+CREATE TABLE medio_pago(
+id int primary key,
+descripcion varchar(30) -- modificaaaaaaaaaar todos los varchar con 150
+);
+--ID_CLIENTE_PERFIL
+
+CREATE TABLE perfil_conductor(
+id int primary key,
+descripcion varchar(30)
+);
+--ID_PERSONA
+
+
+CREATE TABLE vehiculos(
+id int primary key,
+ano int,
+modelo varchar(150),
+placa varchar(150),
+marca varchar(150)
+);
+
+CREATE TABLE cuenta_empresarial(
+id int primary key,
+descripcion varchar(30),
+nombre varchar(150)
+);
+--ID_PERFIL_CLIENTE
+
+CREATE TABLE empresas(
+id int primary key,
+descripcion varchar(30)
+);
+--ID_CUENTA_EMP
+
+
+
+CREATE TABLE estado_viaje(
+id int primary key,
+estado varchar(30)
+);
+
+CREATE TABLE vehiculo_conductor(
+id int primary key,
+tipo_empleado varchar(30),
+nombre varchar(150)
+);
+--ID_PERFILCONDCTOR
+--ID_VEHICULO
+
+
+CREATE TABLE paises(
+id int primary key,
+nombre varchar(30),
+moneda varchar(150)
+);
+
+
+CREATE TABLE departamentos(
+id int primary key,
+nombre varchar(30)
+);
+
+--ID_PAIS
+
+
+CREATE TABLE ciudades(
+id int primary key,
+tipo_empleado varchar(30),
+nombre varchar(150)
+);
+
+--ID_DEPARTAMENTO
+
+
+
+CREATE TABLE viajes(
+id int primary key,
+tarifa_dinamica varchar(30),
+fecha_solicitud date
+);
+
+--ID_VEHICULO_CON
+--ID_TIPO_SERVICIO
+--ID_ESTADO_VIEAJE
+--ID_CIUDAD
+
+CREATE TABLE factura(
+id int primary key,
+total double
+);
+
+--ID_TIPO_SERVICIO
+--ID_VEHICULO_CONDU
+--ID_CIUDAD
+
+
+CREATE TABLE detalle_viaje(
+id int primary key,
+descripcion varchar(150)
+);
+
+--ID_VIAJE
+--ID_PERSONA
+
+
+CREATE TABLE detalle_viaje_empleado(
+id int primary key,
+descripcion varchar(150),
+nombre varchar(150)
+);
+
+--ID_CUENTA_EMP
+--ID_VIAJE
+
+CREATE TABLE detalle_factura(
+id int primary key,
+descripcion varchar(150)
+);
+
+--ID_FACTURA
+--ID_MEDIO_PAGO
+--ID_PRESONA
+
+CREATE TABLE ubicacion_log(
+id int primary key,
+longitud double,
+latitud double
+);
+
+--ID_VIAJE
+
+CREATE TABLE tipo_servicio(
+id int primary key,
+descripcion varchar(150)
+);
+
+CREATE TABLE metodo_pago(
+id int primary key,
+descripcion varchar(150)
+);
+
+/*Create sequences for every primary key.*/
+create sequence id_ciudad
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_departamento
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_pais
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_empresa
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_empresarial
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_email
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_tipo_servicio
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_lenguaje
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_persona
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_detalle_viaje
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence detalle_viaje_emp
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_perfil_conductor
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_cuenta_pago
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_perfil_cliente
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_estado_viaje
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_viaje
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_metodo_pago
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_consignacion
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_promocion
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_medio_pago
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_ubicacion_log
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_liquidacion
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_vehiculo_conductor
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_vehiculo
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_factura
+increment by 1 
+start with 1 minvalue 1; 
+
+create sequence id_detalle_factura
+increment by 1 
+start with 1 minvalue 1;
+
+/*b. Create foreign keys. */
+
+ALTER TABLE ciudades
+add foreign key (id_departamentos)
+references departamentos(id);
+
+
+ALTER TABLE departamentos
+add foreign key (id_pais)
+references paises(id);
+
+ALTER TABLE empresa
+add foreign key (id_cuenta_empresarial)
+references cuenta_empresarial(id);    
+
+ALTER TABLE cuenta_empresarial
+add foreign key (id_perfil_cliente)
+references perfil_cliente (id);
+
+ALTER TABLE email
+add foreign key (id_persona)
+references personas (id);
+
+ALTER TABLE personas
+add foreign key (id_codigo_invitacion)
+references codigo_invitacion (id);
+
+ALTER TABLE personas
+add foreign key (id_lenguaje)
+references lenguaje (id);
+
+ALTER TABLE personas
+add foreign key (id_ciudad)
+references ciudades (id);
+
+ALTER TABLE detalle_viaje
+add foreign key (id_viaje)
+references viajes (id);
+
+ALTER TABLE detalle_viaje
+add foreign key (id_personas)
+references personas (id);
+
+ALTER TABLE detalle_viaje_emp
+add foreign key (id_cuenta_emp)
+references cuenta_empresarial (id);
+
+
+ALTER TABLE detalle_viaje_emp
+add foreign key (id_viaje)
+references viajes (id);
+
+
+ALTER TABLE perfil_conductor
+add foreign key (id_persona)
+references personas (id);
+
+
+ALTER TABLE cuenta_pago
+add foreign key (id_perfil_conductor)
+references perfil_conductor (id);
+
+
+ALTER TABLE perfil_cliente
+add foreign key (id_persona)
+references persona (id);
+
+
+ALTER TABLE perfil_cliente
+add foreign key (id_promo)
+references promociones (id);
+
+
+ALTER TABLE viaje
+add foreign key (id_vehiculo_conductor)
+references vehiculo_conductor (id);
+
+
+ALTER TABLE viaje
+add foreign key (id_tipo_servicio)
+references tipo_servicio (id);
+
+ALTER TABLE viaje
+add foreign key (id_estado_viaje)
+references estado_viaje (id);
+
+ALTER TABLE viaje
+add foreign key (id_ciudad)
+references ciudad (id);
+
+ALTER TABLE consignaciones
+add foreign key (id_perfil_conductor)
+references perfil_conductor (id);
+
+ALTER TABLE medios_pago
+add foreign key (id_cliente_perfil)
+references cliente_perfil (id);
+
+ALTER TABLE ubicacion_log
+add foreign key (id_viaje)
+references viaje (id);
+
+ALTER TABLE liquidaciones
+add foreign key (id_perfil_conductor)
+references perfil_conductor (id);
+
+ALTER TABLE vehiculo_condutor
+add foreign key (id_perfil_conductor)
+references perfil_conductor (id);
+
+ALTER TABLE vehiculo_condutor
+add foreign key (id_vehiculo)
+references vehiculo (id);
+
+ALTER TABLE facturas
+add foreign key (id_tipo_servicio)
+references tipo_servicio (id);
+
+ALTER TABLE facturas
+add foreign key (id_vehiculo_conductor)
+references vehiculo_conductor (id);
+
+ALTER TABLE facturas
+add foreign key (id_ciudad)
+references ciudades (id);
+
+ALTER TABLE detalle_facturas
+add foreign key (id_factura)
+references facturas (id);
+
+ALTER TABLE detalle_facturas
+add foreign key (id_medio_pago)
+references medio_pago (id);
+
+
+ALTER TABLE detalle_facturas
+add foreign key (id_persona)
+references personas (id);
+
+/*c. Insert (Use ?www.generatedata.com or ?https://mockaroo.com and generate a single script using sql developer to export all tables with its rows): 
+    i. 100 drivers with one car each 
+    ii. 500 customers with at least 1 credit card number 
+    iii. 10 trips, each with its GPS coordinates. 
+    iv. At least 20 payments made to drivers. */
+
+
+    
+/*7. Create a backup through RMAN and take a screenshot of the list of backups in the console. Add the image to git.*/ 
+
+
+/*9. Create a video and upload it to Youtube (as unlisted), dropbox or Mega and attach the URL to github where?: 
+a. You explain and justify the decisions made to implement the normalization. 
+b. Explain each bullet of this assignment and execute them through sql developer 
+c. All the members should talk in order to be valid. 
+d. If the video has a bad quality of resolution and/or sound a penalization of ?0.5 will be applied. Same applies if you send multiple videos. 
+e. I highly recommend using ?https://obsproject.com/? to record the video. 
+f. Grading: 
+    i. Time ?(0.3)?: between 20 and 40 minutes 
+    ii. Fluency / Oral expression?
+    iii. Execution of commands */
+    
+    
+
+
+personas  idioma  email  ciudad depto pais perfilCliente (usr,conductor) perfilCondctor() perfilCliente() promociones()
+mediosdepagos() cuentaempresarial() detalle_viaje_empresarial() viaje(estado cancelado proceso finalizado reservado,dinamica si no)
+ detalle_viaje(hora, distancia) tiposervicio(uberx black)metodo pago(efectivo tarjeta) log(info del recorido del viaje,secuencia ubicacion)
+factura()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
